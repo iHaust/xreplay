@@ -1,3 +1,11 @@
+/*
+ * @Author: zhanglitao@zuoyebang.com
+ * @Date: 2023-07-12 14:33:15
+ * @LastEditors: zhanglitao@zuoyebang.com
+ * @LastEditTime: 2023-07-12 15:54:26
+ * @FilePath: /xreplay/player/renders/scroll.ts
+ * @Description: 
+ */
 import { ScrollRecordData } from '../../types'
 import { nodeStore } from '../../utils'
 import { PlayerComponent } from '../components/player'

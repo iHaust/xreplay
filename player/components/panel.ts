@@ -1,3 +1,11 @@
+/*
+ * @Author: zhanglitao@zuoyebang.com
+ * @Date: 2023-07-12 14:33:15
+ * @LastEditors: zhanglitao@zuoyebang.com
+ * @LastEditTime: 2023-07-12 15:47:03
+ * @FilePath: /xreplay/player/components/panel.ts
+ * @Description: 
+ */
 
 import { KeyboardComponent } from './keyboard'
 import { PlayerComponent } from './player'
@@ -29,6 +37,9 @@ export class PanelComponent implements IComponent {
     constructor(c: ContainerComponent) {
         this.c = c
         this.options = c.options
+        if (this.options.hidePanel) {
+            this.target.style.display = 'none'
+        }
         this.initComponent()
     }
 

@@ -23,40 +23,45 @@ function __awaiter(thisArg, _arguments, P, generator) {
     });
 }
 
-class NodeStore {
-    constructor() {
-        this.createNodeId = () => NodeStore.nodeId++;
-        this.init();
-    }
-    init() {
-        this.nodeMap = new Map();
-        this.idMap = new WeakMap();
-    }
-    reset() {
-        this.nodeMap.clear();
-    }
-    getNode(id) {
-        return this.nodeMap.get(id) || null;
-    }
-    addNode(node, id = this.createNodeId()) {
-        this.idMap.set(node, id);
-        this.nodeMap.set(id, node);
-        return id;
-    }
-    removeNode(id) {
-        this.nodeMap.delete(id);
-        this.idMap.delete(this.getNode(id));
-    }
-    getNodeId(node) {
-        return this.idMap.get(node);
-    }
-    updateNode(id, node) {
-        this.idMap.set(node, id);
-        this.nodeMap.set(id, node);
-    }
-}
-NodeStore.nodeId = 1;
-const nodeStore = new NodeStore();
+var RecordType;
+(function (RecordType) {
+    RecordType[RecordType["HEAD"] = 0] = "HEAD";
+    RecordType[RecordType["SNAPSHOT"] = 1] = "SNAPSHOT";
+    RecordType[RecordType["WINDOW"] = 2] = "WINDOW";
+    RecordType[RecordType["SCROLL"] = 3] = "SCROLL";
+    RecordType[RecordType["MOUSE"] = 4] = "MOUSE";
+    RecordType[RecordType["DOM"] = 5] = "DOM";
+    RecordType[RecordType["FORM_EL"] = 6] = "FORM_EL";
+    RecordType[RecordType["LOCATION"] = 7] = "LOCATION";
+    RecordType[RecordType["AUDIO"] = 8] = "AUDIO";
+    RecordType[RecordType["CANVAS"] = 9] = "CANVAS";
+    RecordType[RecordType["TERMINATE"] = 10] = "TERMINATE";
+    RecordType[RecordType["FONT"] = 11] = "FONT";
+    RecordType[RecordType["PATCH"] = 12] = "PATCH";
+    RecordType[RecordType["CUSTOM"] = 13] = "CUSTOM";
+    RecordType[RecordType["WEBGL"] = 14] = "WEBGL";
+    RecordType[RecordType["CANVAS_SNAPSHOT"] = 15] = "CANVAS_SNAPSHOT";
+    RecordType[RecordType["VIDEO"] = 16] = "VIDEO";
+})(RecordType || (RecordType = {}));
+var FormElementEvent;
+(function (FormElementEvent) {
+    FormElementEvent[FormElementEvent["PROP"] = 0] = "PROP";
+    FormElementEvent[FormElementEvent["INPUT"] = 1] = "INPUT";
+    FormElementEvent[FormElementEvent["CHANGE"] = 2] = "CHANGE";
+    FormElementEvent[FormElementEvent["FOCUS"] = 3] = "FOCUS";
+    FormElementEvent[FormElementEvent["BLUR"] = 4] = "BLUR";
+})(FormElementEvent || (FormElementEvent = {}));
+var MouseEventType;
+(function (MouseEventType) {
+    MouseEventType[MouseEventType["MOVE"] = 0] = "MOVE";
+    MouseEventType[MouseEventType["CLICK"] = 1] = "CLICK";
+})(MouseEventType || (MouseEventType = {}));
+var TransactionMode;
+(function (TransactionMode) {
+    TransactionMode["READONLY"] = "readonly";
+    TransactionMode["READWRITE"] = "readwrite";
+    TransactionMode["VERSIONCHANGE"] = "versionchange";
+})(TransactionMode || (TransactionMode = {}));
 
 function Diff() {}
 Diff.prototype = {
@@ -523,46 +528,6 @@ arrayDiff.tokenize = function (value) {
 arrayDiff.join = arrayDiff.removeEmpty = function (value) {
   return value;
 };
-
-var RecordType;
-(function (RecordType) {
-    RecordType[RecordType["HEAD"] = 0] = "HEAD";
-    RecordType[RecordType["SNAPSHOT"] = 1] = "SNAPSHOT";
-    RecordType[RecordType["WINDOW"] = 2] = "WINDOW";
-    RecordType[RecordType["SCROLL"] = 3] = "SCROLL";
-    RecordType[RecordType["MOUSE"] = 4] = "MOUSE";
-    RecordType[RecordType["DOM"] = 5] = "DOM";
-    RecordType[RecordType["FORM_EL"] = 6] = "FORM_EL";
-    RecordType[RecordType["LOCATION"] = 7] = "LOCATION";
-    RecordType[RecordType["AUDIO"] = 8] = "AUDIO";
-    RecordType[RecordType["CANVAS"] = 9] = "CANVAS";
-    RecordType[RecordType["TERMINATE"] = 10] = "TERMINATE";
-    RecordType[RecordType["FONT"] = 11] = "FONT";
-    RecordType[RecordType["PATCH"] = 12] = "PATCH";
-    RecordType[RecordType["CUSTOM"] = 13] = "CUSTOM";
-    RecordType[RecordType["WEBGL"] = 14] = "WEBGL";
-    RecordType[RecordType["CANVAS_SNAPSHOT"] = 15] = "CANVAS_SNAPSHOT";
-    RecordType[RecordType["VIDEO"] = 16] = "VIDEO";
-})(RecordType || (RecordType = {}));
-var FormElementEvent;
-(function (FormElementEvent) {
-    FormElementEvent[FormElementEvent["PROP"] = 0] = "PROP";
-    FormElementEvent[FormElementEvent["INPUT"] = 1] = "INPUT";
-    FormElementEvent[FormElementEvent["CHANGE"] = 2] = "CHANGE";
-    FormElementEvent[FormElementEvent["FOCUS"] = 3] = "FOCUS";
-    FormElementEvent[FormElementEvent["BLUR"] = 4] = "BLUR";
-})(FormElementEvent || (FormElementEvent = {}));
-var MouseEventType;
-(function (MouseEventType) {
-    MouseEventType[MouseEventType["MOVE"] = 0] = "MOVE";
-    MouseEventType[MouseEventType["CLICK"] = 1] = "CLICK";
-})(MouseEventType || (MouseEventType = {}));
-var TransactionMode;
-(function (TransactionMode) {
-    TransactionMode["READONLY"] = "readonly";
-    TransactionMode["READWRITE"] = "readwrite";
-    TransactionMode["VERSIONCHANGE"] = "versionchange";
-})(TransactionMode || (TransactionMode = {}));
 
 var name = "xreplay";
 var version$1 = "0.0.3";
@@ -1327,6 +1292,41 @@ class AnimationFrame {
         cancelAnimationFrame(this.requestID);
     }
 }
+
+class NodeStore {
+    constructor() {
+        this.createNodeId = () => NodeStore.nodeId++;
+        this.init();
+    }
+    init() {
+        this.nodeMap = new Map();
+        this.idMap = new WeakMap();
+    }
+    reset() {
+        this.nodeMap.clear();
+    }
+    getNode(id) {
+        return this.nodeMap.get(id) || null;
+    }
+    addNode(node, id = this.createNodeId()) {
+        this.idMap.set(node, id);
+        this.nodeMap.set(id, node);
+        return id;
+    }
+    removeNode(id) {
+        this.nodeMap.delete(id);
+        this.idMap.delete(this.getNode(id));
+    }
+    getNodeId(node) {
+        return this.idMap.get(node);
+    }
+    updateNode(id, node) {
+        this.idMap.set(node, id);
+        this.nodeMap.set(id, node);
+    }
+}
+NodeStore.nodeId = 1;
+const nodeStore = new NodeStore();
 
 const getVNode = (el, opts = {}) => {
     return isElementNode(el)

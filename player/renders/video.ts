@@ -1,3 +1,19 @@
+/*
+ * @Author: zhanglitao@zuoyebang.com
+ * @Date: 2023-07-12 14:33:15
+ * @LastEditors: zhanglitao@zuoyebang.com
+ * @LastEditTime: 2023-07-12 15:54:52
+ * @FilePath: /xreplay/player/renders/video.ts
+ * @Description: 
+ */
+/**
+ * Copyright (c) oct16.
+ * https://github.com/oct16
+ *
+ * This source code is licensed under the GPL-3.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
 
 import { VideoRecordData } from '../../types'
 import { nodeStore } from '../../utils'

@@ -1,4 +1,3 @@
-
 import { setAttribute } from '../../virtual-dom'
 import { delay } from '../../utils'
 import { ContainerComponent } from './container'
@@ -36,7 +35,7 @@ export class PointerComponent implements IComponent {
 
     private togglePointer(show = !this.show) {
         this.show = show
-        ;(this.pointer.firstElementChild as HTMLElement).style.display = this.show ? 'inherit' : 'none'
+            ; (this.pointer.firstElementChild as HTMLElement).style.display = this.show ? 'inherit' : 'none'
     }
 
     public hidePointer() {

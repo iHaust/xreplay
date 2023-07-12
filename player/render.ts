@@ -1,10 +1,11 @@
-/*
- * @Author: zhanglitao@zuoyebang.com
- * @Date: 2023-07-12 10:03:28
- * @LastEditors: zhanglitao@zuoyebang.com
- * @LastEditTime: 2023-07-12 15:13:58
- * @FilePath: /xreplay/player/render.ts
- * @Description: 
+import { FontRecordData } from '../types'
+/**
+ * Copyright (c) oct16.
+ * https://github.com/oct16
+ *
+ * This source code is licensed under the GPL-3.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
  */
 
 import {
@@ -17,11 +18,11 @@ import {
     SnapshotRecord,
     PreFetchRecordData,
     WebGLRecordData,
-    CanvasSnapshotRecordData,
-    FontRecordData
+    CanvasSnapshotRecordData
 } from '../types'
 import { PlayerComponent } from './components/player'
 import { delay } from '../utils'
+import { renderCanvasSnapshot, renderCanvas2D, renderWebGL } from './renders/canvas'
 import { renderFont } from './renders/font'
 import { renderPatch } from './renders/patch'
 import { renderLocation } from './renders/location'
@@ -80,12 +81,27 @@ export async function renderAll(
             renderLocation(data as LocationRecordData)
             break
         }
+        case RecordType.CANVAS_SNAPSHOT: {
+            renderCanvasSnapshot(data as CanvasSnapshotRecordData)
+            break
+        }
+        case RecordType.CANVAS: {
+            if (!isJumping && speed === 1) {
+                await actionDelay()
+            }
+            renderCanvas2D(data as CanvasRecordData)
+            break
+        }
         case RecordType.FONT: {
             renderFont.call(this, data as FontRecordData)
             break
         }
         case RecordType.PATCH: {
             renderPatch(data as PreFetchRecordData)
+            break
+        }
+        case RecordType.WEBGL: {
+            renderWebGL(data as WebGLRecordData)
             break
         }
         default: {

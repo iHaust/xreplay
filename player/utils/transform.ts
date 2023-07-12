@@ -1,3 +1,11 @@
+/*
+ * @Author: zhanglitao@zuoyebang.com
+ * @Date: 2023-07-12 14:33:15
+ * @LastEditors: zhanglitao@zuoyebang.com
+ * @LastEditTime: 2023-07-12 16:04:58
+ * @FilePath: /xreplay/player/utils/transform.ts
+ * @Description: 
+ */
 import { AudioOptionsData, AudioRecord, AudioStrList, RecordData, RecordType } from '../../types'
 import { base64ToFloat32Array, encodeAudioData } from '../../utils'
 

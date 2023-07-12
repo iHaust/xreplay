@@ -1,41 +1,49 @@
+/**
+ * Copyright (c) oct16.
+ * https://github.com/oct16
+ *
+ * This source code is licensed under the GPL-3.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
 
 import { parseHtmlStr } from './common'
 
 export interface IComponent {
-  parent: HTMLElement
-  target: HTMLElement
+    parent: HTMLElement
+    target: HTMLElement
 }
 
 export function Component(name: string, html: string, opts?: Partial<{ isShadow: boolean }>) {
-  return function (constructor: Function) {
-    if (!customElements.get(name))
-      customElements.define(
-        name,
-        class extends HTMLElement {
-          constructor() {
-            super()
-            const child = parseHtmlStr(html)[0]
-            constructor.prototype.target = child
+    return function (constructor: Function) {
+        if (!customElements.get(name))
+            customElements.define(
+                name,
+                class extends HTMLElement {
+                    constructor() {
+                        super()
+                        const child = parseHtmlStr(html)[0]
+                        constructor.prototype.target = child
 
-            const slot = child.getElementsByTagName('slot')[0]
+                        const slot = child.getElementsByTagName('slot')[0]
 
-            if (slot && this.children?.length > 0) {
-              const parent = slot.parentElement
-                ;[...this.children].forEach(el => parent?.insertBefore(el, null))
-              parent?.removeChild(slot)
-            }
+                        if (slot && this.children?.length > 0) {
+                            const parent = slot.parentElement
+                                ;[...this.children].forEach(el => parent?.insertBefore(el, null))
+                            parent?.removeChild(slot)
+                        }
 
-            if (opts?.isShadow) {
-              this.attachShadow({ mode: 'open' }).append(child)
-            } else {
-              this.parentElement?.replaceChild(child, this)
-            }
+                        if (opts?.isShadow) {
+                            this.attachShadow({ mode: 'open' }).append(child)
+                        } else {
+                            this.parentElement?.replaceChild(child, this)
+                        }
 
-            constructor.prototype.parent = child.parentElement
-          }
-        }
-      )
-  }
+                        constructor.prototype.parent = child.parentElement
+                    }
+                }
+            )
+    }
 }
 
 /**
@@ -44,9 +52,9 @@ export function Component(name: string, html: string, opts?: Partial<{ isShadow:
  * @param str
  */
 export const html = function (strings: TemplateStringsArray, ...values: any) {
-  let str = ''
-  strings.forEach((string, i) => {
-    str += string + (values[i] || '')
-  })
-  return str
+    let str = ''
+    strings.forEach((string, i) => {
+        str += string + (values[i] || '')
+    })
+    return str
 }

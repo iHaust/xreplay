@@ -1,5 +1,13 @@
+/**
+ * Copyright (c) oct16.
+ * https://github.com/oct16
+ *
+ * This source code is licensed under the GPL-3.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
 
-import { Component, html, Store, IComponent } from '../utils'
+import { Component, html, exportReplay, Store, IComponent } from '../utils'
 import { ContainerComponent } from './container'
 import { getRawScriptContent, logAdvice, logError } from '../../utils'
 import { ReplayInternalOptions } from '../../types'
@@ -109,7 +117,63 @@ export class ToolboxComponent implements IComponent {
     }
 
     public async export() {
-        
+        const SDKScript = document.querySelector('#timecat') as HTMLScriptElement
+        const initScript = document.querySelector('#timecat-init') as HTMLScriptElement
+        const scriptList = []
+        const scripts = document.querySelectorAll('script')
+
+        function detectSDKSrc() {
+            // TODO Support ESM module
+            return Array.from(scripts)
+                .map(script => script.src)
+                .find(src => /(timecat)(\.prod)?\.global\.js/.test(src))
+        }
+
+        function detectSDKContent() {
+            return Array.from(scripts)
+                .map(script => script.textContent)
+                .find(content => content?.trim().startsWith('var TimeCat'))
+        }
+
+        function detectInitScriptContent() {
+            return Array.from(scripts)
+                .map(script => script.textContent)
+                .find(content => {
+                    if (content) {
+                        return /new\s(TimeCat\.)?Player/.test(content)
+                    }
+                })
+        }
+
+        async function getScriptSource(scriptElement: HTMLScriptElement) {
+            if (!scriptElement) {
+                return
+            }
+            return (
+                scriptElement.textContent || (await getRawScriptContent(scriptElement.src.trim())) || scriptElement.src
+            )
+        }
+
+        const defaultSDK = `//cdn.jsdelivr.net/npm/timecatjs/dist/timecat.global.prod.js`
+        const SDKSource = (await getScriptSource(SDKScript)) || detectSDKSrc() || detectSDKContent() || defaultSDK
+
+        scriptList.push({
+            name: 'timecat',
+            src: SDKSource
+        })
+
+        const defaultInitScript = `new window.TimeCat.Player({autoplay: true})`
+        const source = (await getScriptSource(initScript)) || detectInitScriptContent() || defaultInitScript
+        scriptList.push({
+            name: 'timecat-init',
+            src: source
+        })
+
+        const replayOptions = Store.getState().player.options
+        exportReplay({
+            ...replayOptions,
+            scripts: scriptList
+        })
     }
 
     private setFullScreen() {

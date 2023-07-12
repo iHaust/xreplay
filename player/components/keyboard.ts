@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) oct16.
+ * https://github.com/oct16
+ *
+ * This source code is licensed under the GPL-3.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
 
 import { ContainerComponent } from './container'
 import { ReplayInternalOptions } from '../../types'
@@ -102,9 +110,9 @@ export class KeyboardComponent implements IComponent {
 
     private setSpeed(speed: number) {
         const speedNodes = this.c.container.querySelectorAll('.speed') as NodeListOf<HTMLButtonElement>
-        ;[...speedNodes].forEach(node => {
-            node.removeAttribute('disabled')
-        })
+            ;[...speedNodes].forEach(node => {
+                node.removeAttribute('disabled')
+            })
 
         const index = getBtnIndex(speed)
 
