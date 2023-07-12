@@ -92,6 +92,11 @@ Diff.prototype = {
         oldLen = oldString.length;
     var editLength = 1;
     var maxEditLength = newLen + oldLen;
+
+    if (options.maxEditLength) {
+      maxEditLength = Math.min(maxEditLength, options.maxEditLength);
+    }
+
     var bestPath = [{
       newPos: -1,
       components: []
@@ -156,15 +161,13 @@ Diff.prototype = {
       editLength++;
     } // Performs the length of edit iteration. Is a bit fugly as this has to support the
     // sync and async mode which is never fun. Loops over execEditLength until a value
-    // is produced.
+    // is produced, or until the edit length exceeds options.maxEditLength (if given),
+    // in which case it will return undefined.
 
 
     if (callback) {
       (function exec() {
         setTimeout(function () {
-          // This should not happen, but we want to be safe.
-
-          /* istanbul ignore next */
           if (editLength > maxEditLength) {
             return callback();
           }
@@ -749,8 +752,525 @@ function createURL(url, base) {
     }
     return { href: url, pathname: url };
 }
+function isNativeFunction(fn) {
+    if (fn.toString().indexOf('[native code]') > -1) {
+        return true;
+    }
+    return false;
+}
 const tempEmptyFn = () => { };
 const tempEmptyPromise = () => Promise.resolve();
+const canvasContext2DAttrs = [
+    'direction',
+    'fillStyle',
+    'filter',
+    'font',
+    'globalAlpha',
+    'globalCompositeOperation',
+    'imageSmoothingEnabled',
+    'imageSmoothingQuality',
+    'lineCap',
+    'lineDashOffset',
+    'lineJoin',
+    'lineWidth',
+    'miterLimit',
+    'shadowBlur',
+    'shadowColor',
+    'shadowOffsetX',
+    'shadowOffsetY',
+    'strokeStyle',
+    'textAlign',
+    'textBaseline'
+];
+const canvasContext2DMethods = [
+    'arc',
+    'arcTo',
+    'beginPath',
+    'bezierCurveTo',
+    'clearRect',
+    'clip',
+    'closePath',
+    'createImageData',
+    'createLinearGradient',
+    'createPattern',
+    'createRadialGradient',
+    'drawFocusIfNeeded',
+    'drawImage',
+    'ellipse',
+    'fill',
+    'fillRect',
+    'fillText',
+    'getImageData',
+    'getLineDash',
+    'getTransform',
+    'isPointInPath',
+    'isPointInStroke',
+    'lineTo',
+    'measureText',
+    'moveTo',
+    'putImageData',
+    'quadraticCurveTo',
+    'rect',
+    'resetTransform',
+    'restore',
+    'rotate',
+    'save',
+    'scale',
+    'setLineDash',
+    'setTransform',
+    'stroke',
+    'strokeRect',
+    'strokeText',
+    'transform',
+    'translate'
+];
+const canvasContext2DKeys = [
+    ...canvasContext2DAttrs,
+    ...canvasContext2DMethods
+];
+const canvasContextWebGLAttrs = [
+    'drawingBufferWidth',
+    'drawingBufferHeight',
+    'ACTIVE_ATTRIBUTES',
+    'ACTIVE_TEXTURE',
+    'ACTIVE_UNIFORMS',
+    'ALIASED_LINE_WIDTH_RANGE',
+    'ALIASED_POINT_SIZE_RANGE',
+    'ALPHA',
+    'ALPHA_BITS',
+    'ALWAYS',
+    'ARRAY_BUFFER',
+    'ARRAY_BUFFER_BINDING',
+    'ATTACHED_SHADERS',
+    'BACK',
+    'BLEND',
+    'BLEND_COLOR',
+    'BLEND_DST_ALPHA',
+    'BLEND_DST_RGB',
+    'BLEND_EQUATION',
+    'BLEND_EQUATION_ALPHA',
+    'BLEND_EQUATION_RGB',
+    'BLEND_SRC_ALPHA',
+    'BLEND_SRC_RGB',
+    'BLUE_BITS',
+    'BOOL',
+    'BOOL_VEC2',
+    'BOOL_VEC3',
+    'BOOL_VEC4',
+    'BROWSER_DEFAULT_WEBGL',
+    'BUFFER_SIZE',
+    'BUFFER_USAGE',
+    'BYTE',
+    'CCW',
+    'CLAMP_TO_EDGE',
+    'COLOR_ATTACHMENT0',
+    'COLOR_BUFFER_BIT',
+    'COLOR_CLEAR_VALUE',
+    'COLOR_WRITEMASK',
+    'COMPILE_STATUS',
+    'COMPRESSED_TEXTURE_FORMATS',
+    'CONSTANT_ALPHA',
+    'CONSTANT_COLOR',
+    'CONTEXT_LOST_WEBGL',
+    'CULL_FACE',
+    'CULL_FACE_MODE',
+    'CURRENT_PROGRAM',
+    'CURRENT_VERTEX_ATTRIB',
+    'CW',
+    'DECR',
+    'DECR_WRAP',
+    'DELETE_STATUS',
+    'DEPTH_ATTACHMENT',
+    'DEPTH_BITS',
+    'DEPTH_BUFFER_BIT',
+    'DEPTH_CLEAR_VALUE',
+    'DEPTH_COMPONENT',
+    'DEPTH_COMPONENT16',
+    'DEPTH_FUNC',
+    'DEPTH_RANGE',
+    'DEPTH_STENCIL',
+    'DEPTH_STENCIL_ATTACHMENT',
+    'DEPTH_TEST',
+    'DEPTH_WRITEMASK',
+    'DITHER',
+    'DONT_CARE',
+    'DST_ALPHA',
+    'DST_COLOR',
+    'DYNAMIC_DRAW',
+    'ELEMENT_ARRAY_BUFFER',
+    'ELEMENT_ARRAY_BUFFER_BINDING',
+    'EQUAL',
+    'FASTEST',
+    'FLOAT',
+    'FLOAT_MAT2',
+    'FLOAT_MAT3',
+    'FLOAT_MAT4',
+    'FLOAT_VEC2',
+    'FLOAT_VEC3',
+    'FLOAT_VEC4',
+    'FRAGMENT_SHADER',
+    'FRAMEBUFFER',
+    'FRAMEBUFFER_ATTACHMENT_OBJECT_NAME',
+    'FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE',
+    'FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE',
+    'FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL',
+    'FRAMEBUFFER_BINDING',
+    'FRAMEBUFFER_COMPLETE',
+    'FRAMEBUFFER_INCOMPLETE_ATTACHMENT',
+    'FRAMEBUFFER_INCOMPLETE_DIMENSIONS',
+    'FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT',
+    'FRAMEBUFFER_UNSUPPORTED',
+    'FRONT',
+    'FRONT_AND_BACK',
+    'FRONT_FACE',
+    'FUNC_ADD',
+    'FUNC_REVERSE_SUBTRACT',
+    'FUNC_SUBTRACT',
+    'GENERATE_MIPMAP_HINT',
+    'GEQUAL',
+    'GREATER',
+    'GREEN_BITS',
+    'HIGH_FLOAT',
+    'HIGH_INT',
+    'IMPLEMENTATION_COLOR_READ_FORMAT',
+    'IMPLEMENTATION_COLOR_READ_TYPE',
+    'INCR',
+    'INCR_WRAP',
+    'INT',
+    'INT_VEC2',
+    'INT_VEC3',
+    'INT_VEC4',
+    'INVALID_ENUM',
+    'INVALID_FRAMEBUFFER_OPERATION',
+    'INVALID_OPERATION',
+    'INVALID_VALUE',
+    'INVERT',
+    'KEEP',
+    'LEQUAL',
+    'LESS',
+    'LINEAR',
+    'LINEAR_MIPMAP_LINEAR',
+    'LINEAR_MIPMAP_NEAREST',
+    'LINES',
+    'LINE_LOOP',
+    'LINE_STRIP',
+    'LINE_WIDTH',
+    'LINK_STATUS',
+    'LOW_FLOAT',
+    'LOW_INT',
+    'LUMINANCE',
+    'LUMINANCE_ALPHA',
+    'MAX_COMBINED_TEXTURE_IMAGE_UNITS',
+    'MAX_CUBE_MAP_TEXTURE_SIZE',
+    'MAX_FRAGMENT_UNIFORM_VECTORS',
+    'MAX_RENDERBUFFER_SIZE',
+    'MAX_TEXTURE_IMAGE_UNITS',
+    'MAX_TEXTURE_SIZE',
+    'MAX_VARYING_VECTORS',
+    'MAX_VERTEX_ATTRIBS',
+    'MAX_VERTEX_TEXTURE_IMAGE_UNITS',
+    'MAX_VERTEX_UNIFORM_VECTORS',
+    'MAX_VIEWPORT_DIMS',
+    'MEDIUM_FLOAT',
+    'MEDIUM_INT',
+    'MIRRORED_REPEAT',
+    'NEAREST',
+    'NEAREST_MIPMAP_LINEAR',
+    'NEAREST_MIPMAP_NEAREST',
+    'NEVER',
+    'NICEST',
+    'NONE',
+    'NOTEQUAL',
+    'NO_ERROR',
+    'ONE',
+    'ONE_MINUS_CONSTANT_ALPHA',
+    'ONE_MINUS_CONSTANT_COLOR',
+    'ONE_MINUS_DST_ALPHA',
+    'ONE_MINUS_DST_COLOR',
+    'ONE_MINUS_SRC_ALPHA',
+    'ONE_MINUS_SRC_COLOR',
+    'OUT_OF_MEMORY',
+    'PACK_ALIGNMENT',
+    'POINTS',
+    'POLYGON_OFFSET_FACTOR',
+    'POLYGON_OFFSET_FILL',
+    'POLYGON_OFFSET_UNITS',
+    'RED_BITS',
+    'RENDERBUFFER',
+    'RENDERBUFFER_ALPHA_SIZE',
+    'RENDERBUFFER_BINDING',
+    'RENDERBUFFER_BLUE_SIZE',
+    'RENDERBUFFER_DEPTH_SIZE',
+    'RENDERBUFFER_GREEN_SIZE',
+    'RENDERBUFFER_HEIGHT',
+    'RENDERBUFFER_INTERNAL_FORMAT',
+    'RENDERBUFFER_RED_SIZE',
+    'RENDERBUFFER_STENCIL_SIZE',
+    'RENDERBUFFER_WIDTH',
+    'RENDERER',
+    'REPEAT',
+    'REPLACE',
+    'RGB',
+    'RGB565',
+    'RGB5_A1',
+    'RGBA',
+    'RGBA4',
+    'SAMPLER_2D',
+    'SAMPLER_CUBE',
+    'SAMPLES',
+    'SAMPLE_ALPHA_TO_COVERAGE',
+    'SAMPLE_BUFFERS',
+    'SAMPLE_COVERAGE',
+    'SAMPLE_COVERAGE_INVERT',
+    'SAMPLE_COVERAGE_VALUE',
+    'SCISSOR_BOX',
+    'SCISSOR_TEST',
+    'SHADER_TYPE',
+    'SHADING_LANGUAGE_VERSION',
+    'SHORT',
+    'SRC_ALPHA',
+    'SRC_ALPHA_SATURATE',
+    'SRC_COLOR',
+    'STATIC_DRAW',
+    'STENCIL_ATTACHMENT',
+    'STENCIL_BACK_FAIL',
+    'STENCIL_BACK_FUNC',
+    'STENCIL_BACK_PASS_DEPTH_FAIL',
+    'STENCIL_BACK_PASS_DEPTH_PASS',
+    'STENCIL_BACK_REF',
+    'STENCIL_BACK_VALUE_MASK',
+    'STENCIL_BACK_WRITEMASK',
+    'STENCIL_BITS',
+    'STENCIL_BUFFER_BIT',
+    'STENCIL_CLEAR_VALUE',
+    'STENCIL_FAIL',
+    'STENCIL_FUNC',
+    'STENCIL_INDEX8',
+    'STENCIL_PASS_DEPTH_FAIL',
+    'STENCIL_PASS_DEPTH_PASS',
+    'STENCIL_REF',
+    'STENCIL_TEST',
+    'STENCIL_VALUE_MASK',
+    'STENCIL_WRITEMASK',
+    'STREAM_DRAW',
+    'SUBPIXEL_BITS',
+    'TEXTURE',
+    'TEXTURE0',
+    'TEXTURE1',
+    'TEXTURE10',
+    'TEXTURE11',
+    'TEXTURE12',
+    'TEXTURE13',
+    'TEXTURE14',
+    'TEXTURE15',
+    'TEXTURE16',
+    'TEXTURE17',
+    'TEXTURE18',
+    'TEXTURE19',
+    'TEXTURE2',
+    'TEXTURE20',
+    'TEXTURE21',
+    'TEXTURE22',
+    'TEXTURE23',
+    'TEXTURE24',
+    'TEXTURE25',
+    'TEXTURE26',
+    'TEXTURE27',
+    'TEXTURE28',
+    'TEXTURE29',
+    'TEXTURE3',
+    'TEXTURE30',
+    'TEXTURE31',
+    'TEXTURE4',
+    'TEXTURE5',
+    'TEXTURE6',
+    'TEXTURE7',
+    'TEXTURE8',
+    'TEXTURE9',
+    'TEXTURE_2D',
+    'TEXTURE_BINDING_2D',
+    'TEXTURE_BINDING_CUBE_MAP',
+    'TEXTURE_CUBE_MAP',
+    'TEXTURE_CUBE_MAP_NEGATIVE_X',
+    'TEXTURE_CUBE_MAP_NEGATIVE_Y',
+    'TEXTURE_CUBE_MAP_NEGATIVE_Z',
+    'TEXTURE_CUBE_MAP_POSITIVE_X',
+    'TEXTURE_CUBE_MAP_POSITIVE_Y',
+    'TEXTURE_CUBE_MAP_POSITIVE_Z',
+    'TEXTURE_MAG_FILTER',
+    'TEXTURE_MIN_FILTER',
+    'TEXTURE_WRAP_S',
+    'TEXTURE_WRAP_T',
+    'TRIANGLES',
+    'TRIANGLE_FAN',
+    'TRIANGLE_STRIP',
+    'UNPACK_ALIGNMENT',
+    'UNPACK_COLORSPACE_CONVERSION_WEBGL',
+    'UNPACK_FLIP_Y_WEBGL',
+    'UNPACK_PREMULTIPLY_ALPHA_WEBGL',
+    'UNSIGNED_BYTE',
+    'UNSIGNED_INT',
+    'UNSIGNED_SHORT',
+    'UNSIGNED_SHORT_4_4_4_4',
+    'UNSIGNED_SHORT_5_5_5_1',
+    'UNSIGNED_SHORT_5_6_5',
+    'VALIDATE_STATUS',
+    'VENDOR',
+    'VERSION',
+    'VERTEX_ATTRIB_ARRAY_BUFFER_BINDING',
+    'VERTEX_ATTRIB_ARRAY_ENABLED',
+    'VERTEX_ATTRIB_ARRAY_NORMALIZED',
+    'VERTEX_ATTRIB_ARRAY_POINTER',
+    'VERTEX_ATTRIB_ARRAY_SIZE',
+    'VERTEX_ATTRIB_ARRAY_STRIDE',
+    'VERTEX_ATTRIB_ARRAY_TYPE',
+    'VERTEX_SHADER',
+    'VIEWPORT',
+    'ZERO'
+];
+const canvasContextWebGLMethods = [
+    'activeTexture',
+    'attachShader',
+    'bindAttribLocation',
+    'bindBuffer',
+    'bindFramebuffer',
+    'bindRenderbuffer',
+    'bindTexture',
+    'blendColor',
+    'blendEquation',
+    'blendEquationSeparate',
+    'blendFunc',
+    'blendFuncSeparate',
+    'bufferData',
+    'bufferSubData',
+    'checkFramebufferStatus',
+    'clear',
+    'clearColor',
+    'clearDepth',
+    'clearStencil',
+    'colorMask',
+    'compileShader',
+    'compressedTexImage2D',
+    'compressedTexSubImage2D',
+    'copyTexImage2D',
+    'copyTexSubImage2D',
+    'createBuffer',
+    'createFramebuffer',
+    'createProgram',
+    'createRenderbuffer',
+    'createShader',
+    'createTexture',
+    'cullFace',
+    'deleteBuffer',
+    'deleteFramebuffer',
+    'deleteProgram',
+    'deleteRenderbuffer',
+    'deleteShader',
+    'deleteTexture',
+    'depthFunc',
+    'depthMask',
+    'depthRange',
+    'detachShader',
+    'disable',
+    'disableVertexAttribArray',
+    'drawArrays',
+    'drawElements',
+    'enable',
+    'enableVertexAttribArray',
+    'finish',
+    'flush',
+    'framebufferRenderbuffer',
+    'framebufferTexture2D',
+    'frontFace',
+    'generateMipmap',
+    'getActiveAttrib',
+    'getActiveUniform',
+    'getAttachedShaders',
+    'getAttribLocation',
+    'getBufferParameter',
+    'getContextAttributes',
+    'getError',
+    'getExtension',
+    'getFramebufferAttachmentParameter',
+    'getParameter',
+    'getProgramInfoLog',
+    'getProgramParameter',
+    'getRenderbufferParameter',
+    'getShaderInfoLog',
+    'getShaderParameter',
+    'getShaderPrecisionFormat',
+    'getShaderSource',
+    'getSupportedExtensions',
+    'getTexParameter',
+    'getUniform',
+    'getUniformLocation',
+    'getVertexAttrib',
+    'getVertexAttribOffset',
+    'hint',
+    'isBuffer',
+    'isContextLost',
+    'isEnabled',
+    'isFramebuffer',
+    'isProgram',
+    'isRenderbuffer',
+    'isShader',
+    'isTexture',
+    'lineWidth',
+    'linkProgram',
+    'makeXRCompatible',
+    'pixelStorei',
+    'polygonOffset',
+    'readPixels',
+    'renderbufferStorage',
+    'sampleCoverage',
+    'scissor',
+    'shaderSource',
+    'stencilFunc',
+    'stencilFuncSeparate',
+    'stencilMask',
+    'stencilMaskSeparate',
+    'stencilOp',
+    'stencilOpSeparate',
+    'texImage2D',
+    'texParameterf',
+    'texParameteri',
+    'texSubImage2D',
+    'uniform1f',
+    'uniform1fv',
+    'uniform1i',
+    'uniform1iv',
+    'uniform2f',
+    'uniform2fv',
+    'uniform2i',
+    'uniform2iv',
+    'uniform3f',
+    'uniform3fv',
+    'uniform3i',
+    'uniform3iv',
+    'uniform4f',
+    'uniform4fv',
+    'uniform4i',
+    'uniform4iv',
+    'uniformMatrix2fv',
+    'uniformMatrix3fv',
+    'uniformMatrix4fv',
+    'useProgram',
+    'validateProgram',
+    'vertexAttrib1f',
+    'vertexAttrib1fv',
+    'vertexAttrib2f',
+    'vertexAttrib2fv',
+    'vertexAttrib3f',
+    'vertexAttrib3fv',
+    'vertexAttrib4f',
+    'vertexAttrib4fv',
+    'vertexAttribPointer',
+    'viewport'
+];
+const canvasContextWebGLKeys = [
+    ...canvasContextWebGLAttrs,
+    ...canvasContextWebGLMethods
+];
 
 const snapshot = () => window.G_REPLAY_DATA && window.G_REPLAY_DATA.snapshot.data;
 const href = () => { var _a; return ((_a = snapshot()) === null || _a === void 0 ? void 0 : _a.href) || location.href; };
@@ -839,7 +1359,7 @@ const getAttr = (el) => {
     return resAttr;
 };
 function getExtra(node, isSVG) {
-    var _a, _b;
+    var _a;
     const { tagName } = node;
     const extra = {};
     const props = {};
@@ -862,7 +1382,7 @@ function getExtra(node, isSVG) {
         }
     }
     else if (tagName === 'STYLE') {
-        const rules = (_b = (_a = node) === null || _a === void 0 ? void 0 : _a.sheet) === null || _b === void 0 ? void 0 : _b.rules;
+        const rules = (_a = node === null || node === void 0 ? void 0 : node.sheet) === null || _a === void 0 ? void 0 : _a.rules;
         if (rules && rules.length) {
             const cssTexts = Array.from(rules)
                 .map(rule => rule.cssText)
@@ -906,11 +1426,11 @@ const createFlatVNode = (el, isSVG = false) => {
     return vNode;
 };
 const createElement = (el, inheritSVG) => {
-    var _a, _b, _c;
+    var _a, _b;
     const vNode = getVNode(el, { isSVG: inheritSVG });
     const { id } = vNode;
     nodeStore.addNode(el, id);
-    if ((_c = (_b = (_a = vNode) === null || _a === void 0 ? void 0 : _a.extra) === null || _b === void 0 ? void 0 : _b.props) === null || _c === void 0 ? void 0 : _c.textContent) {
+    if ((_b = (_a = vNode === null || vNode === void 0 ? void 0 : vNode.extra) === null || _a === void 0 ? void 0 : _a.props) === null || _b === void 0 ? void 0 : _b.textContent) {
         return vNode;
     }
     if (vNode.type === Node.ELEMENT_NODE) {
@@ -930,6 +1450,7 @@ class Watcher {
     constructor(options) {
         this.getNode = (id) => nodeStore.getNode.call(nodeStore, id);
         this.getNodeId = (n) => nodeStore.getNodeId.call(nodeStore, n);
+        this.addNode = (n) => nodeStore.addNode.call(nodeStore, n);
         const { emit, context, relatedId, recorder } = options;
         this.options = options;
         this.recorder = recorder;
@@ -1215,9 +1736,11 @@ class DOMWatcher extends Watcher {
                     vn.extra.isSVG = true;
                 }
             }
+            const ns = node.nextSibling;
+            const nextId = ns ? this.getNodeId(ns) || this.addNode(ns) : null;
             addedNodes.push({
                 parentId,
-                nextId: this.getNodeId(node.nextSibling) || null,
+                nextId,
                 node: vn
             });
             if (isVNode(vn)) {
@@ -1297,9 +1820,9 @@ class DOMWatcher extends Watcher {
         }
     }
     waitAndRecordIFrame(iframe) {
-        var _a, _b;
+        var _a;
         const contentWindow = iframe.contentWindow;
-        (_b = (_a = iframe) === null || _a === void 0 ? void 0 : _a.frameRecorder) === null || _b === void 0 ? void 0 : _b.destroy();
+        (_a = iframe === null || iframe === void 0 ? void 0 : iframe.frameRecorder) === null || _a === void 0 ? void 0 : _a.destroy();
         const onLoadHandle = () => {
             this.recorder.recordIFrame(contentWindow);
             iframe.removeEventListener('load', onLoadHandle);
@@ -1323,9 +1846,8 @@ class DOMWatcher extends Watcher {
         }
     }
     rewriteAddedSource(addedNodes, time) {
-        var _a;
         const { options } = this;
-        const configs = ((_a = options) === null || _a === void 0 ? void 0 : _a.rewriteResource) || [];
+        const configs = (options === null || options === void 0 ? void 0 : options.rewriteResource) || [];
         if (!(configs === null || configs === void 0 ? void 0 : configs.length)) {
             return;
         }
@@ -2067,6 +2589,473 @@ class WindowWatcher extends Watcher {
     }
 }
 
+function strokesManager(opts) {
+    const tasks = Object.create(null);
+    const timeouts = Object.create(null);
+    function emitData(canvasId) {
+        const timeout = timeouts[canvasId];
+        clearTimeout(timeout);
+        timeouts[canvasId] = 0;
+        const calls = tasks[canvasId].slice();
+        tasks[canvasId].length = 0;
+        opts.fn.call(this, canvasId, calls);
+    }
+    return function (canvasId, name, args) {
+        if (!tasks[canvasId]) {
+            tasks[canvasId] = [];
+        }
+        if (!opts.blockInstances.some(instance => args instanceof instance)) {
+            tasks[canvasId].push({
+                name,
+                args
+            });
+        }
+        if (!timeouts[canvasId]) {
+            const timeout = window.setTimeout(() => {
+                emitData(canvasId);
+            }, opts.wait);
+            timeouts[canvasId] = timeout;
+        }
+    };
+}
+function detectCanvasContextType(canvasElement, callback) {
+    const canvas = canvasElement;
+    if (!canvas.typeWatchers) {
+        canvas.typeWatchers = [];
+        const original = canvas.getContext;
+        canvas.getContext = function (contextId, options) {
+            canvas.getContext = original;
+            canvas.typeWatchers.forEach(callback => callback.call(this, contextId, options));
+            canvas.typeWatchers.length = 0;
+            delete canvas.typeWatchers;
+            return original.apply(this, arguments);
+        };
+    }
+    canvas.typeWatchers.push(callback);
+}
+function isCanvasBlank(canvas) {
+    const blank = document.createElement('canvas');
+    blank.width = canvas.width;
+    blank.height = canvas.height;
+    return canvas.toDataURL() === blank.toDataURL();
+}
+
+class CanvasSnapshotWatcher extends Watcher {
+    init() {
+        const canvasElements = document.getElementsByTagName('canvas');
+        Array.from(canvasElements).forEach(canvas => {
+            this.snapshotCanvas(canvas);
+        });
+    }
+    snapshotCanvas(canvas) {
+        if (isCanvasBlank(canvas)) {
+            return;
+        }
+        const dataURL = canvas.toDataURL();
+        this.emitData(RecordType.CANVAS_SNAPSHOT, {
+            id: this.getNodeId(canvas),
+            src: dataURL
+        });
+    }
+}
+
+const listeners = [];
+function proxyCreateElement(callback) {
+    listeners.push(callback);
+    const originalCreateElement = document.createElement;
+    if (!isNativeFunction(originalCreateElement)) {
+        return;
+    }
+    this.uninstall(() => {
+        document.createElement = originalCreateElement;
+    });
+    document.createElement = function (tagName, options) {
+        const ret = originalCreateElement.call(this, tagName, options);
+        if (options !== false) {
+            listeners.forEach(listener => listener(ret));
+        }
+        return ret;
+    };
+}
+function proxyCreateCanvasElement(callback) {
+    const fn = (element) => {
+        if (element.tagName === 'CANVAS') {
+            callback(element);
+        }
+    };
+    proxyCreateElement.call(this, fn);
+}
+function removeProxies() {
+    listeners.length = 0;
+}
+
+const ProxiedCanvasCache$1 = new WeakMap();
+class Canvas2DWatcher extends Watcher {
+    constructor() {
+        super(...arguments);
+        this.aggregateDataEmitter = this.strokesManager((id, strokes) => {
+            this.emitData(RecordType.CANVAS, {
+                id,
+                strokes
+            });
+        });
+    }
+    getCanvasInitState(ctx) {
+        const keys = canvasContext2DAttrs;
+        return Object.values(keys).reduce((obj, key) => {
+            return Object.assign(Object.assign({}, obj), { [key]: ctx[key] });
+        }, {});
+    }
+    init() {
+        this.watchCreatedCanvas();
+        this.watchCreatingCanvas();
+    }
+    watchCreatedCanvas() {
+        const canvasElements = document.getElementsByTagName('canvas');
+        Array.from(canvasElements).forEach(canvas => {
+            if (isCanvasBlank(canvas)) {
+                detectCanvasContextType(canvas, contextId => {
+                    if (contextId === '2d') {
+                        this.watchCanvas(canvas);
+                    }
+                });
+            }
+            else {
+                this.watchCanvas(canvas);
+            }
+        });
+    }
+    watchCreatingCanvas() {
+        const callback = (canvas) => {
+            detectCanvasContextType(canvas, contextId => {
+                if (contextId === '2d') {
+                    this.watchCanvas(canvas);
+                }
+            });
+        };
+        proxyCreateCanvasElement.call(this, callback);
+        this.uninstall(() => removeProxies());
+    }
+    watchCanvas(canvasElement) {
+        const self = this;
+        const ctxProto = CanvasRenderingContext2D.prototype;
+        const names = canvasContext2DKeys;
+        const ctx = canvasElement.getContext('2d');
+        if (!ctx) {
+            return;
+        }
+        if (ProxiedCanvasCache$1.get(canvasElement)) {
+            return;
+        }
+        this.emitData(RecordType.CANVAS, {
+            id: this.getNodeId(ctx.canvas),
+            status: this.getCanvasInitState(ctx)
+        });
+        const ctxTemp = {};
+        names.forEach(name => {
+            const original = Object.getOwnPropertyDescriptor(ctxProto, name);
+            if (!original) {
+                return;
+            }
+            const method = original.value;
+            const val = ctx[name];
+            ctxTemp[name] = val;
+            const descriptor = Object.getOwnPropertyDescriptor(ctx, name);
+            Object.defineProperty(ctx, name, {
+                get() {
+                    const context = this;
+                    const id = self.getNodeId(this.canvas);
+                    return typeof method === 'function'
+                        ? function () {
+                            var _a;
+                            const args = [...arguments];
+                            if (name === 'createPattern') {
+                                args[0] = id;
+                            }
+                            else if (name === 'drawImage') {
+                                const elType = (_a = args[0]) === null || _a === void 0 ? void 0 : _a.constructor.name;
+                                if (elType === 'HTMLCanvasElement') {
+                                    const dataUrl = args[0].toDataURL();
+                                    args[0] = dataUrl;
+                                }
+                                else if (elType === 'HTMLImageElement') {
+                                    const img = args[0];
+                                    img.setAttribute('crossorigin', 'anonymous');
+                                    const imgCanvas = document.createElement('canvas', false);
+                                    imgCanvas.width = img.width;
+                                    imgCanvas.height = img.height;
+                                    const ctx = imgCanvas.getContext('2d');
+                                    ctx.drawImage(img, 0, 0, img.width, img.height);
+                                    args[0] = imgCanvas.toDataURL();
+                                }
+                            }
+                            self.aggregateDataEmitter(id, name, args);
+                            return method.apply(context, arguments);
+                        }
+                        : ctxTemp[name];
+                },
+                set: function (value) {
+                    var _a;
+                    const id = self.getNodeId(this.canvas);
+                    if (typeof value !== 'function') {
+                        self.aggregateDataEmitter(id, name, value);
+                    }
+                    ctxTemp[name] = value;
+                    return (_a = original.set) === null || _a === void 0 ? void 0 : _a.apply(this, arguments);
+                },
+                configurable: true
+            });
+            this.uninstall(() => {
+                Object.defineProperty(ctx, name, descriptor || original);
+            });
+        });
+        ProxiedCanvasCache$1.set(canvasElement, true);
+        this.uninstall(() => {
+            ProxiedCanvasCache$1.set(canvasElement, false);
+        });
+    }
+    strokesManager(func, wait = 30) {
+        const tasks = Object.create(null);
+        const timeouts = Object.create(null);
+        const blockInstances = [CanvasGradient, CanvasPattern];
+        return function (id, name, args) {
+            if (!id) {
+                return;
+            }
+            const canvas = nodeStore.getNode(id);
+            if (!canvas) {
+                return;
+            }
+            const context = this;
+            const clearRectIndex = canvasContext2DKeys.indexOf('clearRect');
+            const emitStrokes = (id) => {
+                const timeout = timeouts[id];
+                clearTimeout(timeout);
+                timeouts[id] = 0;
+                const strokes = tasks[id].slice();
+                const { width: canvasWidth, height: canvasHeight } = canvas.getBoundingClientRect();
+                const clearIndex = strokes.reverse().findIndex(stroke => {
+                    if (stroke.name === clearRectIndex) {
+                        const args = stroke.args;
+                        if (args[0] === 0 && args[1] === 0 && args[2] === canvasWidth && args[3] === canvasHeight) {
+                            return true;
+                        }
+                    }
+                });
+                const latestStrokes = !~clearIndex ? strokes.reverse() : strokes.slice(0, clearIndex + 1).reverse();
+                func.call(context, id, latestStrokes);
+                tasks[id].length = 0;
+            };
+            if (!tasks[id]) {
+                tasks[id] = [];
+            }
+            if (!blockInstances.some(instance => args instanceof instance)) {
+                const index = canvasContext2DKeys.indexOf(name);
+                tasks[id].push({
+                    name: index,
+                    args
+                });
+            }
+            if (!timeouts[id]) {
+                const timeout = window.setTimeout(() => {
+                    emitStrokes(id);
+                }, wait);
+                timeouts[id] = timeout;
+            }
+        };
+    }
+}
+
+const WebGLConstructors = [
+    WebGLActiveInfo,
+    WebGLBuffer,
+    WebGLFramebuffer,
+    WebGLProgram,
+    WebGLRenderbuffer,
+    WebGLShader,
+    WebGLShaderPrecisionFormat,
+    WebGLTexture,
+    WebGLUniformLocation
+];
+const ProxiedCanvasCache = new WeakMap();
+class CanvasWebGLWatcher extends Watcher {
+    constructor() {
+        super(...arguments);
+        this.GLVars = Object.create(null);
+        this.emitStroke = strokesManager({
+            keys: canvasContextWebGLKeys,
+            wait: 20,
+            blockInstances: [],
+            fn: (id, args) => {
+                args = this.parseArgs(args);
+                this.emitData(RecordType.WEBGL, {
+                    id,
+                    args
+                });
+            }
+        });
+    }
+    init() {
+        this.patchWebGLProto(WebGLRenderingContext.prototype);
+        if (window.WebGL2RenderingContext !== undefined) {
+            this.patchWebGLProto(WebGL2RenderingContext.prototype);
+        }
+    }
+    patchWebGLProto(proto) {
+        Object.getOwnPropertyNames(proto).forEach((name) => {
+            if (name === 'canvas' || name === 'constructor') {
+                return;
+            }
+            if (proto.__lookupGetter__(name) !== undefined) {
+                return;
+            }
+            if (typeof proto[name] === 'function') {
+                this.patchProtoFunc(proto, name);
+            }
+        });
+    }
+    patchProtoFunc(proto, name) {
+        const original = proto[name];
+        const self = this;
+        if ('isPatch' in original) {
+            return;
+        }
+        const patch = function () {
+            const ret = original.apply(this, arguments);
+            const args = [...arguments];
+            setTimeout(() => {
+                const canvas = this.canvas;
+                const id = self.getNodeId(canvas) || nodeStore.addNode(canvas);
+                self.emitStroke(id, name, args);
+            });
+            return ret;
+        };
+        patch.isPatch = true;
+        proto[name] = patch;
+        this.uninstall(() => {
+            delete patch.isPatch;
+            proto[name] = original;
+        });
+    }
+    watchCreatedCanvas() {
+        const canvasElements = document.getElementsByTagName('canvas');
+        Array.from(canvasElements).forEach(canvas => {
+            if (isCanvasBlank(canvas)) {
+                detectCanvasContextType(canvas, contextId => {
+                    if (contextId === 'webgl' || contextId === 'experimental-webgl') {
+                        this.watchCanvas(canvas);
+                    }
+                });
+            }
+        });
+    }
+    watchCreatingCanvas() {
+        const callback = (canvas) => {
+            detectCanvasContextType(canvas, contextId => {
+                if (contextId === 'webgl' || contextId === 'experimental-webgl') {
+                    this.watchCanvas(canvas);
+                }
+            });
+        };
+        proxyCreateCanvasElement.call(this, callback);
+        this.uninstall(() => removeProxies());
+    }
+    watchCanvas(canvasElement) {
+        const self = this;
+        const ctxProto = WebGLRenderingContext.prototype;
+        const ctx = canvasElement.getContext('webgl') || canvasElement.getContext('experimental-webgl');
+        if (!ctx) {
+            return;
+        }
+        if (ProxiedCanvasCache.get(canvasElement)) {
+            return;
+        }
+        const ctxTemp = {};
+        for (const key in ctx) {
+            const name = key;
+            if (name === 'canvas') {
+                continue;
+            }
+            if (key === 'drawingBufferHeight' || key === 'drawingBufferWidth') {
+                continue;
+            }
+            const original = Object.getOwnPropertyDescriptor(ctxProto, name);
+            if (!original) {
+                return;
+            }
+            const value = original === null || original === void 0 ? void 0 : original.value;
+            ctxTemp[name] = value;
+            const descriptor = Object.getOwnPropertyDescriptor(ctx, name);
+            Object.defineProperty(ctx, name, {
+                get() {
+                    const context = this;
+                    return typeof value === 'function'
+                        ? function () {
+                            const args = [...arguments];
+                            setTimeout(() => {
+                                const id = self.getNodeId(context.canvas) || nodeStore.addNode(canvasElement);
+                                self.emitStroke(id, name, args);
+                            });
+                            return value.apply(context, arguments);
+                        }
+                        : ctxTemp[name];
+                },
+                set: function (value) {
+                    var _a;
+                    setTimeout(() => {
+                        const id = self.getNodeId(this.canvas) || nodeStore.addNode(canvasElement);
+                        if (typeof value !== 'function') {
+                            this.emitStroke(id, name, value);
+                        }
+                    });
+                    ctxTemp[name] = value;
+                    return (_a = original.set) === null || _a === void 0 ? void 0 : _a.apply(this, arguments);
+                },
+                configurable: true
+            });
+            this.uninstall(() => {
+                Object.defineProperty(ctx, name, descriptor || original);
+            });
+        }
+        ProxiedCanvasCache.set(canvasElement, true);
+        this.uninstall(() => {
+            ProxiedCanvasCache.set(canvasElement, false);
+        });
+    }
+    parseArgs(argsList) {
+        return argsList.map(({ name, args }) => {
+            return {
+                name,
+                args: args.map((arg) => this.getWebGLVariable(arg))
+            };
+        });
+    }
+    getWebGLVariable(arg) {
+        if (ArrayBuffer.isView(arg)) {
+            return '$f32arr' + Array.prototype.slice.call(arg);
+        }
+        else if (arg instanceof Array) {
+            return '$arr' + Array.prototype.slice.call(arg);
+        }
+        else if (arg instanceof HTMLImageElement) {
+            return '$src@' + arg.src;
+        }
+        else if (WebGLConstructors.some(ctor => arg instanceof ctor) ||
+            (typeof arg === 'object' && arg !== null) ||
+            (arg && arg.constructor.name === 'WebGLVertexArrayObjectOES')) {
+            const ctorName = arg.constructor.name;
+            const glVars = this.GLVars[ctorName] || (this.GLVars[ctorName] = []);
+            let index = glVars.indexOf(arg);
+            if (!~index) {
+                index = glVars.length;
+                glVars.push(arg);
+            }
+            return '$' + ctorName + '@' + index;
+        }
+        return arg;
+    }
+}
+
 class TerminateWatcher extends Watcher {
     init() {
         this.context.addEventListener('beforeunload', this.handleFn);
@@ -2125,6 +3114,9 @@ const baseWatchers = {
     ScrollWatcher
 };
 const watchers = Object.assign(Object.assign({ LocationWatcher }, baseWatchers), { WindowWatcher,
+    CanvasSnapshotWatcher,
+    Canvas2DWatcher,
+    CanvasWebGLWatcher,
     FontWatcher,
     TerminateWatcher });
 
@@ -2546,6 +3538,11 @@ var INSPECT_MAX_BYTES = 50;
 Buffer.TYPED_ARRAY_SUPPORT = global$1.TYPED_ARRAY_SUPPORT !== undefined
   ? global$1.TYPED_ARRAY_SUPPORT
   : true;
+
+/*
+ * Export kMaxLength after typed array support is determined.
+ */
+kMaxLength();
 
 function kMaxLength () {
   return Buffer.TYPED_ARRAY_SUPPORT

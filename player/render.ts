@@ -1,3 +1,11 @@
+/*
+ * @Author: zhanglitao@zuoyebang.com
+ * @Date: 2023-07-12 10:03:28
+ * @LastEditors: zhanglitao@zuoyebang.com
+ * @LastEditTime: 2023-07-12 15:13:58
+ * @FilePath: /xreplay/player/render.ts
+ * @Description: 
+ */
 
 import {
     RecordData,
@@ -9,7 +17,8 @@ import {
     SnapshotRecord,
     PreFetchRecordData,
     WebGLRecordData,
-    CanvasSnapshotRecordData
+    CanvasSnapshotRecordData,
+    FontRecordData
 } from '../types'
 import { PlayerComponent } from './components/player'
 import { delay } from '../utils'
@@ -72,7 +81,7 @@ export async function renderAll(
             break
         }
         case RecordType.FONT: {
-            renderFont.call(this, data as CanvasRecordData)
+            renderFont.call(this, data as FontRecordData)
             break
         }
         case RecordType.PATCH: {

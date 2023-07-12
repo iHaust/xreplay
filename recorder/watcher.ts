@@ -1,3 +1,11 @@
+/*
+ * @Author: zhanglitao@zuoyebang.com
+ * @Date: 2023-07-12 10:04:24
+ * @LastEditors: zhanglitao@zuoyebang.com
+ * @LastEditTime: 2023-07-12 15:05:16
+ * @FilePath: /xreplay/recorder/watcher.ts
+ * @Description: 
+ */
 
 import { WatcherArgs, RecordEvent, RecordData, RecordType } from '../types'
 import { debounce, throttle, nodeStore, getTime } from '../utils'
@@ -29,6 +37,7 @@ export class Watcher<T extends RecordData> {
 
   public getNode = (id: number): Node => nodeStore.getNode.call(nodeStore, id)
   public getNodeId = (n: Node): number => nodeStore.getNodeId.call(nodeStore, n)
+  public addNode = (n: Node): number => nodeStore.addNode.call(nodeStore, n)
 
   public uninstall(fn: Function) {
     this.options.listenStore.add(fn)
